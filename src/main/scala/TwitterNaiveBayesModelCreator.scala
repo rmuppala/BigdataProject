@@ -1,7 +1,7 @@
-import NaiveBayesLab.distinctNaiveBayesData
 import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.mllib.classification.{NaiveBayes, NaiveBayesModel}
+import org.apache.spark.mllib.evaluation.MulticlassMetrics
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.serializer.KryoSerializer
@@ -91,16 +91,27 @@ object TwitterNaiveBayesModelCreator {
     //naiveBayesModel.save(sc, PropertiesLoader.naiveBayesModelPath)
 
     val naiveBayesModel : NaiveBayesModel = NaiveBayesModel.load(sc, "data/tweets_sentiment/NBModel")
-    
+
     val tw2= testingDataSet.filter("_c1 is not null")
     val actualVsPredictionRDD = tw2.rdd.map {
       case Row(tweet: String, score: Int) =>
         val tweetText = replaceNewLines(tweet)
         val tweetInWords: Seq[String] = MLlibSentimentAnalyzer.getBarebonesTweetText(tweetText, stopWordsList.value)
         (score.toDouble,
-          naiveBayesModel.predict(MLlibSentimentAnalyzer.transformFeatures(tweetInWords)),
-          tweetText)
+          naiveBayesModel.predict(MLlibSentimentAnalyzer.transformFeatures(tweetInWords))
+          )
     }
+
+
+    val metrics = new MulticlassMetrics(actualVsPredictionRDD)
+
+    val confusionMatrix = metrics.confusionMatrix
+    println("Twitter Model Confusion Matrix= \n",confusionMatrix)
+
+
+    println( "Twitter Model  Accuracy " + metrics.accuracy )
+
+    val myModelStat=Seq(metrics.precision,metrics.fMeasure,metrics.recall)
     val accuracy = 100.0 * actualVsPredictionRDD.filter(x => x._1 == x._2).count() / tweetsDF.count()
 
     println("Accuracy = " + accuracy)
