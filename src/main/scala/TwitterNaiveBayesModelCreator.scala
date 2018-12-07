@@ -73,7 +73,7 @@ object TwitterNaiveBayesModelCreator {
     val trainingDataSet = allDistinctData(0)
     val testingDataSet = allDistinctData(1)
 
-    /*val tw1= trainingDataSet.filter("_c1 is not null")
+    val tw1= trainingDataSet.filter("_c1 is not null")
     //val labeledRDD = tweetsDF.select("score", "text").rdd.map {
       val labeledRDD = tw1.rdd.map {
       case Row(text: String, score: Int) =>
@@ -87,7 +87,7 @@ object TwitterNaiveBayesModelCreator {
      labeledRDD.randomSplit(Array(.70,.30),13L)
 
 
-    val naiveBayesModel: NaiveBayesModel = NaiveBayes.train(labeledRDD, lambda = 1.0, modelType = "multinomial")*/
+    val naiveBayesModel: NaiveBayesModel = NaiveBayes.train(labeledRDD, lambda = 1.0, modelType = "multinomial")
     //naiveBayesModel.save(sc, PropertiesLoader.naiveBayesModelPath)
 
     val naiveBayesModel : NaiveBayesModel = NaiveBayesModel.load(sc, "data/tweets_sentiment/NBModel")
