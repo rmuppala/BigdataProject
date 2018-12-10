@@ -9,13 +9,17 @@ object TwitterStream {
 
     //Set the hadoop home directory and location of winutils
     //Adjust this as needed for your system
-    System.setProperty("hadoop.home.dir", "E:\\winutils")
+    System.setProperty("hadoop.home.dir", "C:\\winutils")
+    System.setProperty("twitter4j.oauth.consumerKey", "Jb84CCc8NcRl84WQzaTlxc5mo")
+    System.setProperty("twitter4j.oauth.consumerSecret", "sThcDS4McrvhuHhLMUlu3l8K986ZjtLzabxavTqf78LJe3SqmP")
+    System.setProperty("twitter4j.oauth.accessToken", "2289501380-WsvgDpdEeVfWbHgq6JF372WxuGzAXl616LfIuLJ")
+    System.setProperty("twitter4j.oauth.accessTokenSecret", "AfoIDmtrkPJ1ucURM4vt2KRDmMltgIuB9DN5VIeTk9mCY")
 
     // Create the context with a connection to cassandra
     val conf = new SparkConf()
       .set("cassandra.connection.host","127.0.0.1:9042")
       .setMaster("local[2]")
-      .setAppName("twitterinformatics")
+      .setAppName("vinayTwitterData")
     val ssc = new StreamingContext(conf, Seconds(5))
 
     //The Cassandra table should be configured as follows.
@@ -46,6 +50,7 @@ object TwitterStream {
     //oauth.consumerSecret=<ConsumerSecret>
     //oauth.accessToken=<AccessToken>
     //oauth.accessTokenSecret=<AccessTokenSecret>
+
     val stream = TwitterUtils.createStream(ssc, None, filters)
 
     //Perform data analysis on the stream and format the contained RDDs to be in the correct column order for Cassandra
@@ -54,13 +59,13 @@ object TwitterStream {
       val avgSent = sentiment.reduce(_+_)/sentiment.length
       
       //Replace 2 below with result from Bayes
-      (status.getId, avgSent, 2, status.getGeoLocation, status.getLang, status.getUser.getLocation, status.getText)
+      (status.getId,status.getText, avgSent, 2, status.getGeoLocation, status.getLang, status.getUser.getLocation)
     }
 
     //Save each element of the stream to Cassandra
     data.foreachRDD{rdd=>
       if (rdd.count() > 0) {
-        rdd.saveToCassandra("tweets","tweet")
+        rdd.saveToCassandra("tweets","tweet_6")
       }
     }
 
